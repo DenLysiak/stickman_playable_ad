@@ -1,0 +1,26 @@
+{
+  "name": "3d_game",
+  "version": "1.0.0",
+  "description": "no_description",
+  "main": "service.js",
+  "homepage": "https://DenLysiak.github.io/playable_Ad_Stickman",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack",
+    "start": "webpack serve --open",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "nipplejs": "^0.10.2",
+    "three": "^0.173.0"
+  },
+  "devDependencies": {
+    "gh-pages": "^6.3.0",
+    "webpack": "^5.98.0",
+    "webpack-cli": "^6.0.1",
+    "webpack-dev-server": "^5.2.0"
+  }
+}

@@ -1,0 +1,11 @@
+Model Information:
+* title:	Test Animated Star
+* source:	https://sketchfab.com/3d-models/test-animated-star-53be6d3f6095446db58be466ec274632
+* author:	han714 (https://sketchfab.com/hanle714)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Test Animated Star" (https://sketchfab.com/3d-models/test-animated-star-53be6d3f6095446db58be466ec274632) by han714 (https://sketchfab.com/hanle714) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

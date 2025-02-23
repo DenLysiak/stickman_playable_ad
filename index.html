@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Playable Ad</title>
+      <style>
+        body {
+          margin: 0;
+        }
+      </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/nipplejs@0.8.0/dist/nipplejs.min.js" async defer></script>
+  <script type="importmap" defer async>
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.173.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.173.0/examples/jsm/"
+      }
+    }
+  </script>
+  <script type="module" src='./service.js' async defer></script>
+</head>
+<body>
+  <div id="counter" style="position: absolute; top: 20px; left: 20px; color: black; font-size: 24px;">
+    Stars Collected: <span id="score">0</span>
+  </div>
+
+    <div style="position: absolute; top: 40px; left: 20px; color: black; font-size: 24px;">
+      Use arrow keys or joystick to collect stars
+    </div>
+
+    <div id="joystick-container" style="position: absolute; bottom: 20px; left: 20px; width: 150px; height: 150px;" />
+</body>
+</html>
