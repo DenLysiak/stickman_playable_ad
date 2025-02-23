@@ -19,7 +19,6 @@
       }
     }
   </script>
-  <script type="module" src='./service.js' async defer></script>
 </head>
 <body>
   <div id="counter" style="position: absolute; top: 20px; left: 20px; color: black; font-size: 24px;">
@@ -31,5 +30,319 @@
     </div>
 
     <div id="joystick-container" style="position: absolute; bottom: 20px; left: 20px; width: 150px; height: 150px;" />
+
+    <script type="module">
+      import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+        import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
+
+        // import * as THREE from 'three';
+        // import { GLTFLoader } from '/node_modules/three/examples/jsm/loaders/GLTFLoader.js';
+
+        let SCREEN_WIDTH = window.innerWidth;
+        let SCREEN_HEIGHT = window.innerHeight;
+
+        // Scene Setup
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x87CEEB);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+        document.body.appendChild(renderer.domElement);
+
+        const light = new THREE.AmbientLight(0xffffff);
+        scene.add(light);
+
+        // Loading of Model
+        const LOADER = new GLTFLoader();
+        let stickman, mixer, walkAction, idleAction;
+        let actions = {};
+
+        const stars = [];
+        const starMixers = [];
+
+        LOADER.load('/src/stickman_model/scene.gltf', function (gltf) {
+          stickman = gltf.scene;
+          scene.add(stickman);
+
+          mixer = new THREE.AnimationMixer(stickman); // Setup Animation Mixer
+
+          gltf.animations.forEach((clip) => {
+            const action = mixer.clipAction(clip);
+            actions[clip.name] = action;
+          });
+
+          // Set Idle as Default Animation
+          if (actions['Idle']) {
+            idleAction = actions['Idle'];
+            idleAction.play();
+          }
+
+          if (actions['Run']) {
+            walkAction = actions['Run'];
+          }
+
+          if (gltf.animations.length > 0) {
+            const action = mixer.clipAction(gltf.animations[0]);
+            action.play();
+          }
+        }, undefined, function (error) {
+          console.error('Error loading model:', error);
+        });
+
+        function loadStarModel(x, z) {
+          LOADER.load('/src/star_model/scene.gltf', function (gltf) {
+            const star = gltf.scene;
+            star.position.set(x, 0.5, z); // Random position
+            scene.add(star);
+            stars.push(star);
+
+            if (gltf.animations.length > 0) {
+              const mixer = new THREE.AnimationMixer(star);
+
+              gltf.animations.forEach((clip) => {
+                mixer.clipAction(clip).play(); // Play all animations
+              });
+
+              starMixers.push(mixer); // Store the mixer
+            }
+
+          }, undefined, function (error) {
+            console.error('Error loading star model:', error);
+          });
+        }
+
+        // Create 5 stars at random positions
+        for (let i = 0; i < 5; i++) {
+          loadStarModel(Math.random() * 10 - 5, Math.random() * 10 - 5);
+        }
+
+        camera.position.set(0, 2, 3); // Camera position 
+
+        // Movement Controls
+        const keys = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false };
+        let isWalking = false;
+
+        window.addEventListener('keydown', (event) => {
+          if (event.key in keys) {
+            keys[event.key] = true;
+            startWalking();
+          }
+        });
+
+        window.addEventListener('keyup', (event) => {
+          if (event.key in keys) {
+            keys[event.key] = false;
+            stopWalking();
+          }
+        });
+
+        window.addEventListener('resize', onWindowResize);
+
+        const joystickContainer = document.getElementById('joystick-container');
+
+        const joystick = nipplejs.create({
+          zone: joystickContainer, // Attach to HTML element
+          mode: 'static',
+          position: { left: '50px', bottom: '50px' },
+          color: 'blue',
+        });
+
+
+        let movement = { x: 0, y: 0 }; // Store joystick movement
+
+        // Listen for joystick movements
+        joystick.on('move', (event, data) => {
+          if (data && data.angle) {
+            const angle = data.angle.degree; // Get angle in degrees
+            const distance = data.distance;  // Get the distance from the center of the joystick
+
+            const speed = 0.001 * distance;  // Adjust movement speed based on distance
+
+            if (angle >= 0 && angle <= 45) {
+              // Move forward-right (Diagonal)
+              stickman.position.z -= speed * 0.7; // Forward
+              stickman.position.x += speed * 0.7; // Right
+              stickman.rotation.y = Math.PI / 2; // Rotate to face forward-right
+            } else if (angle >= 45 && angle <= 135) {
+              // Move forward
+              stickman.position.z -= speed; // Forward
+              stickman.rotation.y = Math.PI; // Face forward
+            } else if (angle > 135 && angle <= 180) {
+              // Move forward-left
+              stickman.position.z -= speed * 0.7; // Forward
+              stickman.position.x -= speed * 0.7; // Left
+              stickman.rotation.y = -Math.PI / 2; // Rotate to face forward-left
+            } else if (angle >= 225 && angle < 315) {
+              // Move backward
+              stickman.position.z += speed; // Backward
+              stickman.rotation.y = 0; // Face backward
+            } else if (angle > 180 && angle < 225) {
+              //move backward-left 
+              stickman.position.z += speed * 0.7; // Backward
+              stickman.position.x -= speed * 0.7; // Left
+              stickman.rotation.y = -Math.PI / 4; // Rotate to face backward-left
+            } else {
+              //move backward-right
+              stickman.position.z += speed * 0.7; // Backward
+              stickman.position.x += speed * 0.7; // right
+              stickman.rotation.y = Math.PI / 4; // Rotate to face backward-right
+            }
+
+            if (!isWalking && walkAction) {
+              isWalking = true;
+
+              if (idleAction) idleAction.stop(); // Stop idle animation
+
+              walkAction.reset().play(); // Start walk animation
+            }
+
+          }
+        });
+
+        // Stop movement when joystick is released
+        joystick.on('end', () => {
+          movement.x = 0;
+          movement.y = 0;
+
+          if (isWalking && idleAction) {
+            isWalking = false;
+            walkAction.stop(); // Stop running animation
+            idleAction.reset().play(); // Start idle animation
+          }
+        });
+
+
+        function onWindowResize() {
+          SCREEN_WIDTH = window.innerWidth;
+          SCREEN_HEIGHT = window.innerHeight;
+
+          renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+
+          camera.aspect = SCREEN_WIDTH / SCREEN_HEIGHT;
+          camera.updateProjectionMatrix();
+        }
+
+        // Function to Start Walking Animation
+        function startWalking() {
+          if (!isWalking && walkAction) {
+            isWalking = true;
+            if (idleAction) idleAction.stop();
+            walkAction.reset().play();
+          }
+        }
+
+        // Function to Stop Walking Animation
+        function stopWalking() {
+          if (isWalking) {
+            isWalking = false;
+            if (walkAction) walkAction.stop();
+            if (idleAction) idleAction.play();
+          }
+        }
+
+        let score = 0;
+        const scoreElement = document.getElementById('score');
+
+        function checkCollisions() {
+          if (!stickman) return;
+
+          stars.forEach((star, index) => {
+            const distance = stickman.position.distanceTo(star.position);
+
+            if (distance < 0.7) { // If player is close enough
+              scene.remove(star); // Remove star from scene
+              stars.splice(index, 1); // Remove from array
+
+              score++; // Increase score
+              scoreElement.textContent = score; // Update UI
+
+              loadStarModel(Math.random() * 10 - 5, Math.random() * 10 - 5);
+            }
+          });
+        }
+
+        // Animation Loop
+        const clock = new THREE.Clock();
+
+        const cameraOffset = new THREE.Vector3(0, 5, 5); // Set the camera's relative position to the stickman
+
+        // Update camera position in the animation loop
+        function updateCameraPosition() {
+          if (!stickman) return;
+
+          // Set the camera position relative to the stickman position
+          camera.position.lerp(stickman.position.clone().add(cameraOffset), 0.1);
+
+          // Make the camera always look at the stickman
+          camera.lookAt(stickman.position);
+        }
+
+
+        function animate() {
+          requestAnimationFrame(animate);
+
+          updateCameraPosition();
+
+          checkCollisions();
+
+          const delta = clock.getDelta(); // Time since last frame
+
+          if (mixer) mixer.update(delta); // To update animation
+
+          starMixers.forEach(mixer => mixer.update(delta));
+
+          if (stickman) {
+            const speed = 2 * delta; // Movement speed
+
+            stickman.position.x += movement.x * 0.1; // Move left/right
+            stickman.position.z -= movement.y * 0.1; // Move forward/backward
+
+            if (movement.x > 0) {
+              stickman.rotation.y = Math.PI / 2; // Face right
+            } else if (movement.x < 0) {
+              stickman.rotation.y = -Math.PI / 2; // Face left
+            }
+
+            if (movement.y > 0) {
+              stickman.rotation.y = 0; // Face forward
+            } else if (movement.y < 0) {
+              stickman.rotation.y = Math.PI; // Face backward
+            }
+
+            if (keys.ArrowUp) {
+              stickman.position.z -= speed;
+              stickman.rotation.y = Math.PI; // Face forward
+            }
+
+            if (keys.ArrowDown) {
+              stickman.position.z += speed;
+              stickman.rotation.y = 0; // Face backward
+            }
+
+            if (keys.ArrowLeft) {
+              stickman.position.x -= speed;
+              stickman.rotation.y = -Math.PI / 2; // Face left
+            }
+
+            if (keys.ArrowRight) {
+              stickman.position.x += speed;
+              stickman.rotation.y = Math.PI / 2; // Face right
+            }
+
+            if (movement.x !== 0 || movement.y !== 0) {
+              // Adjust rotation based on the joystick angle
+              let angle = Math.atan2(movement.x, movement.y);
+              stickman.rotation.y = angle + Math.PI / 2; // Offset so the front faces forward
+            }
+          }
+
+          renderer.render(scene, camera);
+        }
+
+        animate();
+    </script>
 </body>
 </html>
