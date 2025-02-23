@@ -63,7 +63,7 @@
         const stars = [];
         const starMixers = [];
 
-        LOADER.load('/src/stickman_model/scene.gltf', function (gltf) {
+        LOADER.load('./public/models/stickman_model/scene.gltf', function (gltf) {
           stickman = gltf.scene;
           scene.add(stickman);
 
@@ -93,7 +93,7 @@
         });
 
         function loadStarModel(x, z) {
-          LOADER.load('/src/star_model/scene.gltf', function (gltf) {
+          LOADER.load('./public/models/star_model/scene.gltf', function (gltf) {
             const star = gltf.scene;
             star.position.set(x, 0.5, z); // Random position
             scene.add(star);
